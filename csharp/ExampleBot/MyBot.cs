@@ -9,6 +9,8 @@ namespace MyBot
         //maximum moves
         static int Maxmoves = 6;
 
+        int ben;
+
         //TODO: useless
         static bool hastMaxmoves = true;
 
