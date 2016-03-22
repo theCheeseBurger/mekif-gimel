@@ -6,7 +6,13 @@ namespace MyBot
 {
     public class MyBot : Pirates.IPirateBot
     {
-    
+
+        //check
+        //123
+        //its roy
+        //its raz
+        // its Oz
+        //maximum moves
         static int Maxmoves = 6;
         static bool hastMaxmoves = true; //TODO: unnecessary
 
@@ -120,26 +126,15 @@ namespace MyBot
             return null;
         }
 
-        /// <summary>
-        /// Returns list of enemy pirates that are sober and dont have treasure
-        /// </summary>
-        /// <param name="game"></param>
-        /// <returns>Returns list of enemy pirates that are sober and dont have treasure</returns>
         private List<Pirate> EnemyGoodPirates(IPirateGame game)
         {
-            //מביאה לי את כל האויבים הטובים שהם לא שיכורים ולא אבודים ובלי אוצר
-
-            List<Pirate> EnemyWithoutSober = new List<Pirate>();
-
-            foreach (Pirate pirate in game.EnemySoberPirates())
+            List<Pirate> goodPirates = new List<Pirate>();
+            foreach (Pirate enemy in game.EnemySoberPirates())
             {
-                if (game.EnemyPiratesWithoutTreasures().Contains(pirate))
-                {
-                    EnemyWithoutSober.Add(pirate);
-                }
+                if (!enemy.HasTreasure)
+                    goodPirates.Add(enemy);
             }
-            // may return empty list
-            return EnemyWithoutSober;
+            return goodPirates;
         }
 
         private bool TryDefence(IPirateGame game, Pirate friendlyPirate)
@@ -157,7 +152,7 @@ namespace MyBot
 
         private void TakeAction(IPirateGame game, PirateTactics tactics)
         {
-            if (tactics != null && game.Treasures().Count >= 0 && !tactics.Pirate.HasTreasure)
+            if (tactics != null && game.Treasures().Count >= 0)
             {
                 Pirate enemy = findEnemyWithTreasure(game, tactics.Pirate);
                 if (enemy != null)
@@ -472,6 +467,7 @@ namespace MyBot
             return enemeyPirate;
         }
 
+
         private bool TryAttack(IPirateGame game, Pirate pirate)
         {
             foreach (Pirate enemy in game.EnemyPirates())
@@ -485,6 +481,7 @@ namespace MyBot
             }
             return false;
         }
+
 
         /// <summary>
         /// retuns the number of attacking ships we control.
@@ -534,10 +531,10 @@ namespace MyBot
         }
 
         /// <summary>
-        /// Returns list of my sober pirates that dont have treasure
+        /// 
         /// </summary>
         /// <param name="game"></param>
-        /// <returns>Returns list of my sober pirates that dont have treasure</returns>
+        /// <returns>returns the sober pirates that has no trasure</returns>
         private List<Pirate> MyGoodPirates(IPirateGame game)
         {
             List<Pirate> withoutSober = new List<Pirate>();
@@ -617,12 +614,10 @@ namespace MyBot
 
             return null;
         }
-
         public List<Treasure> GoodTreasures(IPirateGame game)
         {
             return null;
         }
-
         private void NoCollisionOnlyDrunk(IPirateGame game, PirateTactics tactic)
         {
             List<Location> locations = game.GetSailOptions(tactic.Pirate, tactic.FinalDestination, tactic.Moves);
@@ -645,169 +640,6 @@ namespace MyBot
 
             tactic.TempDestination = locations[0];
         }
-
-        #region Helpful Attack Functions
-
-        /// <summary>
-        /// Return true if we lose
-        /// </summary>
-        /// <param name="game"></param>
-        /// <returns></returns true if we lose else false>
-        private bool IsLose(IPirateGame game)
-        {
-            return ((game.GetMyScore() + game.MyPiratesWithTreasures().Count) <
-                (game.GetEnemyScore() + game.EnemyPiratesWithTreasures().Count));
-        }
-
-        /// <summary>
-        /// Finds the closest sober enemy
-        /// </summary>
-        /// <param name="game">This Game</param>
-        /// <param name="pirate">My pirate</param>
-        /// <returns>The closest sober enemy</returns>
-        private Pirate GetClosestEnemy(IPirateGame game, Pirate pirate)
-        {
-            //checks if there are Sober Enemy pirates
-            if (game.EnemySoberPirates().Count > 0)
-            {
-                //The closest enemy
-                Pirate closenemy = game.EnemySoberPirates()[0];
-
-                //running on EnemySoberPirates List
-                foreach (Pirate enemy in game.EnemySoberPirates())
-                {
-                    //EQUALLS the Distances between My pirate to the Enemy pirates 
-                    if (game.Distance(pirate, enemy) < game.Distance(pirate, closenemy))
-                    {
-                        //Chooses the Closer Enemy pirate
-                        closenemy = enemy;
-                    }
-                }
-
-                //returns the Closest Enemy pirate
-                return closenemy;
-            }
-
-            //returns NULL if there is NO Sober Enemies on the Map
-            return null;
-        }
-
-        /// <summary>
-        /// Checks which enemies are in my Radius of attack
-        /// </summary>
-        /// <param name="game">This Game</param>
-        /// <param name="pirate">My pirate</param>
-        /// <returns>List of sober enemy pirates that are in my radius</returns>
-        private List<Pirate> SoberEnemiesInRadius(IPirateGame game, Pirate pirate)
-        {
-            //List that contains all the enemy pirates that are sober
-            List<Pirate> radEnemies = new List<Pirate>();
-
-            //running on EnemySoberPirates List
-            foreach (Pirate enemy in game.EnemySoberPirates())
-            {
-                //checks if the enemy is in Attack Radius
-                if (game.InRange(pirate, enemy))
-                {
-                    //if he is in my Radius than add him to the List
-                    radEnemies.Add(enemy);
-                }
-            }
-
-            //Returns the list of sober enemies that are in my radius of attack
-            return radEnemies;
-        }
-
-        /// <summary>
-        /// Checks the game state
-        /// </summary>
-        /// <param name="game"></param>
-        /// <param name="pirate"></param>
-        /// <returns>Returns true if the game state is beginning else false</returns>
-        private bool isBeginning(IPirateGame game)
-        {
-            bool beginning = true;
-            int totalTreasures = TotalTreasuresInGame(game);
-            int treasuresToWin = totalTreasures / 2 + 1;
-            int takenTreasures = totalTreasures - game.Treasures().Count;
-
-            if (takenTreasures >= treasuresToWin / 2)
-            {
-                beginning = false;
-            }
-
-            return beginning;
-        }
-
-        /// <summary>
-        /// Checks if there is sober enemy (without treasure) that is loaded and closer than the treasure
-        /// </summary>
-        /// <param name="game"></param>
-        /// <param name="pirate"></param>
-        /// <returns></returns Returns loaded sober enemy (without treasure) that is closer than the treasure>
-        private Pirate IsEnemyCloseAndLoaded(IPirateGame game, Pirate pirate)
-        {
-            // מחזירה פיראט אויב טעון בלי אוצר שהמרחק שלך אליו קטן מהמרחק שלך לאוצר
-            foreach (Pirate enemyPirate in EnemyGoodPirates(game))
-            {
-                if (game.Distance(enemyPirate, pirate) < game.Distance(pirate, getMinTreaure(game, pirate)) && enemyPirate.ReloadTurns == 0)
-                {
-                    return enemyPirate;
-                }
-            }
-            // אם אין כאלה פיראטים מחזירה null
-            return null;
-        }
-
-        /// <summary>
-        /// Calculated the number of total treasures in game
-        /// </summary>
-        /// <param name="game"></param>
-        /// <returns>Returns the number of total treasures in game</returns>
-        private int TotalTreasuresInGame(IPirateGame game)
-        {
-            int sum = game.Treasures().Count + game.MyPiratesWithTreasures().Count +
-            game.EnemyPiratesWithTreasures().Count + game.GetMyScore() + game.GetEnemyScore();
-
-            return sum;
-        }
-
-        /// <summary>
-        /// Returns sorted by distance List of PirateTactics
-        /// </summary>
-        /// <param name="game"></param>
-        /// <param name="tactics"></param>
-        /// <returns>Returns sorted by distance List of PirateTactics</returns>
-        private List<PirateTactics> SortTacticsByDistance(IPirateGame game, List<PirateTactics> tactics)
-        {
-
-            List<PirateTactics> sortedTactics = new List<PirateTactics>();
-
-            // אם הרשימה ריקה החזר רשימה ריקה
-            if (tactics.Count == 0)
-            {
-                return sortedTactics;
-            }
-
-            PirateTactics shortTactic = tactics[0];
-            while (tactics.Count > 0)
-            {
-                foreach (PirateTactics tactic in tactics)
-                {
-                    if (game.Distance(tactic.Pirate, tactic.FinalDestination) <
-                        game.Distance(shortTactic.Pirate, shortTactic.FinalDestination))
-                    {
-                        shortTactic = tactic;
-                    }
-                }
-                sortedTactics.Add(shortTactic);
-                tactics.Remove(shortTactic);
-            }
-
-            return sortedTactics;
-        }
-
-        #endregion
 
     }
 }
