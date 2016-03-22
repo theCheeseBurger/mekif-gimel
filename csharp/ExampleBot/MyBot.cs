@@ -468,9 +468,9 @@ namespace MyBot
             {
                 if (game.InRange(pirate, enemy) && pirate.ReloadTurns == 0)
                 {
-                        game.Attack(pirate, enemy);
-                        return true;
-                    
+                    game.Attack(pirate, enemy);
+                    return true;
+
                 }
             }
             return false;
@@ -483,7 +483,6 @@ namespace MyBot
         /// <param name="game"></param>
         /// <returns></returns>
         private int numOfAttackers(IPirateGame game)
-
         {
             int counter = 0;
             foreach (Pirate pirate in game.AllMyPirates())
@@ -635,4 +634,6 @@ namespace MyBot
 
             tactic.TempDestination = locations[0];
         }
-
+    
+    }
+}
