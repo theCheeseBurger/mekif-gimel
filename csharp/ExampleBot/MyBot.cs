@@ -478,7 +478,6 @@ namespace MyBot
             return enemeyPirate;
         }
 
-
         private bool TryAttack(IPirateGame game, Pirate pirate)
         {
             foreach (Pirate enemy in game.EnemyPirates())
@@ -492,7 +491,6 @@ namespace MyBot
             }
             return false;
         }
-
 
         /// <summary>
         /// retuns the number of attacking ships we control.
@@ -542,10 +540,10 @@ namespace MyBot
         }
 
         /// <summary>
-        /// 
+        /// Returns list of my sober pirates that dont have treasure
         /// </summary>
         /// <param name="game"></param>
-        /// <returns>returns the sober pirates that has no trasure</returns>
+        /// <returns>Returns list of my sober pirates that dont have treasure</returns>
         private List<Pirate> MyGoodPirates(IPirateGame game)
         {
             List<Pirate> withoutSober = new List<Pirate>();
@@ -656,8 +654,6 @@ namespace MyBot
 
         #region Helpful Attack Functions
 
-
-
         /// <summary>
         /// Return true if we lose
         /// </summary>
@@ -760,7 +756,7 @@ namespace MyBot
             // מחזירה פיראט אויב טעון בלי אוצר שהמרחק שלך אליו קטן מהמרחק שלך לאוצר
             foreach (Pirate enemyPirate in EnemyGoodPirates(game))
             {
-                if (game.Distance(enemyPirate, pirate) < game.Distance(pirate, minTreasureFromPirate(game, pirate)) && enemyPirate.ReloadTurns == 0)
+                if (game.Distance(enemyPirate, pirate) < game.Distance(pirate, getMinTreaure(game, pirate)) && enemyPirate.ReloadTurns == 0)
                 {
                     return enemyPirate;
                 }
