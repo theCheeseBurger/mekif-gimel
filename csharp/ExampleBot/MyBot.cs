@@ -194,7 +194,7 @@ namespace MyBot
 
         //REMOVE
         /// <summary>
-        /// gets the closest treaure for the priate.
+        /// gets the closest treaure for the pirate.
         /// </summary>
         /// <param name="game"></param>
         /// <param name="pirate"></param>
@@ -329,13 +329,10 @@ namespace MyBot
                     }
                 }
 
-                //List<Location> possibleLocations =
-                //        game.GetSailOptions(tactics.Pirate,
-                //                            tactics.FinalDestination,
-                //                            tactics.Moves);
-
-
+                //List<Location> possibleLocations = game.GetSailOptions(tactics.Pirate,
+                //tactics.FinalDestination, tactics.Moves);
                 //tactics.TempDestination = possibleLocations[0];
+
                 NoCollisionOnlyDrunk(game, tactics);
 
                 if (tactics.Moves != 0)
@@ -344,7 +341,7 @@ namespace MyBot
                 }
                 return null;
             }
-            //returns null when the pirate does not move.
+            //Returns null when the pirate doesn't move.
             return null;
         }
 
