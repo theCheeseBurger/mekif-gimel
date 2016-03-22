@@ -6,6 +6,8 @@ namespace MyBot
 {
     public class MyBot : Pirates.IPirateBot
     {
+        //its raz
+
         //maximum moves
         static int Maxmoves = 6;
         static bool hastMaxmoves = true; //TODO: unnecessary
