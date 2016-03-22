@@ -47,7 +47,7 @@ namespace MyBot
 
             foreach (Pirate soberPirate in game.MySoberPirates())
             {
-                piratetactic = GetPirateTargetNew(game, soberPirate);
+                piratetactic = GetPirateTarget(game, soberPirate);
                 tactics.Add(piratetactic);
             }
 
@@ -109,21 +109,21 @@ namespace MyBot
             if (tactics != null)
             {
                 Pirate enemy = findEnemyWithTreasure(game, tactics.Pirate);
-                if (enemy != null)
-                {
 
-                    if (tactics.Pirate.HasTreasure)
+                if (tactics.Pirate.HasTreasure)
+                {
+                    foreach (Pirate enemyPirate in EnemyGoodPirates(game))
                     {
-                        foreach (Pirate enemyPirate in EnemyGoodPirates(game))
+                        if (game.InRange(tactics.Pirate, enemyPirate) && enemyPirate.ReloadTurns == 0 && enemyPirate.HasTreasure)
                         {
-                            if (game.InRange(tactics.Pirate, enemyPirate) && enemyPirate.ReloadTurns == 0 && enemyPirate.HasTreasure)
-                            {
-                                game.Defend(tactics.Pirate);
-                                return;
-                            }
+                            game.Defend(tactics.Pirate);
+                            return;
                         }
                     }
-                    else if (game.InRange(tactics.Pirate, enemy) && tactics.Pirate.ReloadTurns == 0)
+                }
+                else if (enemy != null)
+                {
+                    if (game.InRange(tactics.Pirate, enemy) && tactics.Pirate.ReloadTurns == 0)
                     {
                         game.Attack(tactics.Pirate, enemy);
                         return;
@@ -157,7 +157,7 @@ namespace MyBot
 
         }
 
-        private PirateTactics GetPirateTargetNew(IPirateGame game, Pirate pirate)
+        private PirateTactics GetPirateTarget(IPirateGame game, Pirate pirate)
         {
             PirateTactics tactics = new PirateTactics() { Pirate = pirate };
             tactics.Moves = PriorityGoldMoves(game, pirate);
@@ -400,6 +400,27 @@ namespace MyBot
                 game.Debug("ani morid location shel " + pirate.Id);
                 locations.Remove(pirate.Location);
             }
+            foreach (Pirate pirate in game.MyPirates())
+            {
+                
+            }
+                if (locations.Count == 0 && tactic.Moves != 0)
+                {
+                    tactic.Moves -= 1;
+                    locations = game.GetSailOptions(tactic.Pirate, tactic.FinalDestination, tactic.Moves);
+                    NoCollisionOnlyDrunk(game, tactic, locations);
+                }
+                else if (tactic.Moves == 0 && game.GetPirateOn(tactic.FinalDestination) != null || tactic.Moves > 0)
+                {
+                    tactic.TempDestination = locations[0];
+                }
+
+                else
+                {
+                    tactic.Moves = -1;
+                    tactic.TempDestination = null;
+                }
+            
         }
 
         #region Not Used
