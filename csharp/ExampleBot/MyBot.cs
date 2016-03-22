@@ -6,6 +6,7 @@ namespace MyBot
 {
     public class MyBot : Pirates.IPirateBot
     {
+        //po
         //its raz
         // its Oz
         //maximum moves
