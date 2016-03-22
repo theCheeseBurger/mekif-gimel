@@ -114,7 +114,7 @@ namespace MyBot
                 {
                     foreach (Pirate enemyPirate in EnemyGoodPirates(game))
                     {
-                        if (game.InRange(tactics.Pirate, enemyPirate) && enemyPirate.ReloadTurns == 0 && enemyPirate.HasTreasure)
+                        if (game.InRange(tactics.Pirate, enemyPirate) && enemyPirate.ReloadTurns == 0 && !enemyPirate.HasTreasure)
                         {
                             game.Defend(tactics.Pirate);
                             return;
