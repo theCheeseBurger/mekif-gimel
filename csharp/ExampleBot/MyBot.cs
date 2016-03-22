@@ -136,7 +136,7 @@ namespace MyBot
             }
             return goodPirates;
         }
-
+        
         private bool TryDefence(IPirateGame game, Pirate friendlyPirate)
         {
             foreach (Pirate enemy in game.EnemyPirates())
@@ -149,7 +149,7 @@ namespace MyBot
             }
             return false;
         }
-
+        //Oz: I'm going change the things that are connected to attack
         private void TakeAction(IPirateGame game, PirateTactics tactics)
         {
             if (tactics != null && game.Treasures().Count >= 0)
@@ -181,7 +181,7 @@ namespace MyBot
             }
         }
 
-        //REMOVE
+        //Oz: I'm going to fix it and change the name to: minTreasureFromPirate
         /// <summary>
         /// gets the closest treaure for the pirate.
         /// </summary>
@@ -436,7 +436,7 @@ namespace MyBot
 
             return minLocation;*/
 
-        //CAHNGE NAME
+        //OZ: going to change it
         /// <summary>
         /// returns the enemey pirate if is worth to attack the pirate else if no pirate is found returns null.
         /// </summary>
@@ -464,7 +464,7 @@ namespace MyBot
             return enemeyPirate;
         }
 
-
+        //Oz: going to change it
         private bool TryAttack(IPirateGame game, Pirate pirate)
         {
             foreach (Pirate enemy in game.EnemyPirates())
@@ -637,6 +637,6 @@ namespace MyBot
 
             tactic.TempDestination = locations[0];
         }
-
+        //OZ: going to add some helpful attack functions
     }
 }
