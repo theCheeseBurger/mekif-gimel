@@ -51,16 +51,41 @@ namespace MyBot
                 tactics.Add(piratetactic);
             }
 
+
             RemoveNulls(tactics);
             NoCollision(game, tactics);
 
             foreach (PirateTactics tactic in tactics)
             {
-                if(tactic != null && tactic.Moves >= 0)
+                if(tactic != null && tactic.Moves >= 0 && tactic.FinalDestination != null)
                 {
                     TakeAction(game, tactic);
                 }
             }
+        }
+
+        private void NewPriorityGoldMoves(IPirateGame game, List<PirateTactics> tactics)
+        {
+            List<PirateTactics> sortedtactics = new List<PirateTactics>();
+
+            int mindistance = int.MaxValue;
+            int distance;
+            PirateTactics minTactic;
+            while (tactics.Count > 0)
+            {
+                foreach (PirateTactics tactic in tactics)
+                {
+                    if(tactic.FinalDestination != null)
+                    {
+                        distance = game.Distance(tactic.Pirate, tactic.FinalDestination);
+                        if(distance < mindistance)
+                        {
+                            mindistance = distance;
+                        }
+                    }
+                }
+            }
+
         }
 
         private Pirate findEnemyWithTreasure(IPirateGame game, Pirate pirate)
@@ -79,6 +104,7 @@ namespace MyBot
             }
             return null;
         }
+
         /// <summary>
         /// Returns list of enemy pirates that are sober and dont have treasure
         /// </summary>
@@ -94,6 +120,7 @@ namespace MyBot
             }
             return goodPirates;
         }
+
         //DO NOT TOUCH - ROEE FUNCITON
         private bool TryDefence(IPirateGame game, Pirate friendlyPirate)
         {
@@ -107,6 +134,7 @@ namespace MyBot
             }
             return false;
         }
+
         //Oz: I'm going change the things that are connected to attack
         private void TakeAction(IPirateGame game, PirateTactics tactics)
         {
@@ -138,6 +166,7 @@ namespace MyBot
                 game.SetSail(tactics.Pirate, tactics.TempDestination);
             }
         }
+
         /// <summary>
         /// Finds the closest treasure to the pirate
         /// </summary>
@@ -165,56 +194,42 @@ namespace MyBot
 
         }
 
+
         private PirateTactics GetPirateTarget(IPirateGame game, Pirate pirate)
         {
             PirateTactics tactics = new PirateTactics() { Pirate = pirate };
             tactics.Moves = PriorityGoldMoves(game, pirate);
 
 
-            if (tactics.Moves != 0)
-            {
+            
                 if (tactics.Pirate.HasTreasure)
                 {
                     tactics.FinalDestination = tactics.Pirate.InitialLocation;
-                    tactics.Moves = 1;
                 }
                 else
                 {
                     Pirate enemyPirate = findEnemyWithTreasure(game, pirate);
                     if (enemyPirate != null && pirate.ReloadTurns == 0)
                     {
+                        game.Debug("ani po!");
                         tactics.FinalDestination = enemyPirate.Location;
 
                     }
                     else
                     {
                         Treasure treasure = minTreasureFromPirate(game, pirate);
-                        tactics.FinalDestination = treasure.Location;
-                        targetableTreasures.Remove(treasure);
+                        if (treasure != null)
+                        {
+                            tactics.FinalDestination = treasure.Location;
+                            targetableTreasures.Remove(treasure);
+                        }
                     }
                 }
 
-                List<Location> possibleLocations =
-                        game.GetSailOptions(tactics.Pirate,
-                                            tactics.FinalDestination,
-                                            tactics.Moves);
+                return tactics;
 
-                tactics.TempDestination = possibleLocations[0];
-
-                game.Debug("-> pirate id : " + tactics.Pirate.Id);
-                game.Debug("-> final destination : " + tactics.FinalDestination);
-                game.Debug("-> temporary destination : (can be changed for collisions) " + tactics.TempDestination);
-                game.Debug("-> moves : " + tactics.Moves);
-                game.Debug("-------------------------");
-
-                if (tactics.Moves != 0)
-                {
-                    return tactics;
-                }
-                return null;
-            }
-
-            return null;
+                
+                    
 
         }
 
@@ -339,6 +354,12 @@ namespace MyBot
                     NoCollisionOnlyDrunk(game, tactic, locations);
                     NoCollisionOnlyFriends(game, tactic, piratetactics, locations);
                     NoCollsionStanding(game, tactic, locations);
+
+                    game.Debug("-> pirate id : " + tactic.Pirate.Id);
+                    game.Debug("-> final destination : " + tactic.FinalDestination);
+                    game.Debug("-> temporary destination : (can be changed for collisions) " + tactic.TempDestination);
+                    game.Debug("-> moves : " + tactic.Moves);
+                    game.Debug("-------------------------");
                 }
 
             }
@@ -355,7 +376,7 @@ namespace MyBot
                     locations.Remove(tactic2.TempDestination);
                 }
             }
-            if (locations.Count == 0 && tactic.Moves != 0)
+            if (locations.Count == 0 && tactic.Moves > 0)
             {
                 tactic.Moves -= 1;
                 locations = game.GetSailOptions(tactic.Pirate, tactic.FinalDestination, tactic.Moves);
@@ -382,7 +403,7 @@ namespace MyBot
             {
                 locations.Remove(pirate.Location);
             }
-            if (locations.Count == 0 && tactic.Moves != 0)
+            if (locations.Count == 0 && tactic.Moves > 0)
             {
                 tactic.Moves -= 1;
                 locations = game.GetSailOptions(tactic.Pirate, tactic.FinalDestination, tactic.Moves);
@@ -407,15 +428,16 @@ namespace MyBot
             }
             foreach (Pirate pirate in game.MyPirates())
             {
-                
+                locations.Remove(pirate.Location);
             }
-                if (locations.Count == 0 && tactic.Moves != 0)
+                if (locations.Count == 0 && tactic.Moves > 0)
                 {
                     tactic.Moves -= 1;
                     locations = game.GetSailOptions(tactic.Pirate, tactic.FinalDestination, tactic.Moves);
                     NoCollisionOnlyDrunk(game, tactic, locations);
                 }
-                else if (tactic.Moves == 0 && game.GetPirateOn(tactic.FinalDestination) != null || tactic.Moves > 0)
+
+                else if (locations.Count > 0 && tactic.Moves == 0 && game.GetPirateOn(tactic.FinalDestination) != null || tactic.Moves > 0)
                 {
                     tactic.TempDestination = locations[0];
                 }
@@ -1009,6 +1031,37 @@ namespace MyBot
         }
 
         #endregion
+
+
+        //TODO: Roee i need this function
+
+        /// <summary>
+        /// its the same as your funcion but i need bool(once for pirate target , and i dont want to defend, and once for takeaction)
+        /// </summary>
+        /// <param name="game"></param>
+        /// <param name="pirate"></param>
+        /// <param name="toDefend"></param>
+        /// <returns></returns>
+        private bool tryDefence(IPirateGame game, Pirate pirate, bool toDefend)
+        {
+            return true;
+        }
+
+        //TODO: Oz I need this function
+
+        /// <summary>
+        /// the same as 
+        /// </summary>
+        /// <param name="game"></param>
+        /// <param name="pirate"></param>
+        /// <param name="toAttack"></param>
+        /// <returns></returns>
+        private Pirate tryAttack(IPirateGame game, Pirate pirate, bool toAttack)
+        {
+            return null;
+        }
+
+
 
     }
 }
