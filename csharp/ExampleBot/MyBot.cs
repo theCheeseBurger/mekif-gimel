@@ -136,6 +136,25 @@ namespace MyBot
         }
 
         //Oz: I'm going change the things that are connected to attack
+        //roee divided TakeAction to 2 parts, this is the defence part.
+        private void TakeActionDefence(IPirateGame game, PirateTactics tactics)
+        {
+            if (tactics != null)
+            {
+                if (tactics.Pirate.HasTreasure)
+                {
+                    foreach (Pirate enemyPirate in EnemyGoodPirates(game))
+                    {
+                        if (game.InRange(tactics.Pirate, enemyPirate) && enemyPirate.ReloadTurns == 0 && !enemyPirate.HasTreasure)
+                        {
+                            game.Defend(tactics.Pirate);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        //יש להוריד את החלק של ההגנה מפה 
         private void TakeAction(IPirateGame game, PirateTactics tactics)
         {
             if (tactics != null)
@@ -220,16 +239,16 @@ namespace MyBot
                         Treasure treasure = minTreasureFromPirate(game, pirate);
                         if (treasure != null)
                         {
-                            tactics.FinalDestination = treasure.Location;
-                            targetableTreasures.Remove(treasure);
-                        }
+                        tactics.FinalDestination = treasure.Location;
+                        targetableTreasures.Remove(treasure);
                     }
+                }
                 }
 
                 return tactics;
 
-                
-                    
+
+
 
         }
 
