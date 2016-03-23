@@ -1197,6 +1197,13 @@ namespace MyBot
             return null;
         }
 
+        //TODO: Vitaly
+
+        private Powerup TryPowerUp(IPirateGame game, Pirate pirate)
+        {
+            return null;
+        }
+
 
 
     }
