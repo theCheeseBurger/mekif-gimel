@@ -7,7 +7,7 @@ namespace MyBot
     public class MyBot : Pirates.IPirateBot
     {
         //345
-    
+        //check
         //123
         //its roy
         //its raz
@@ -149,7 +149,30 @@ namespace MyBot
             }
             return false;
         }
+        //roee has divided TakeAction to 2 part, this is the defence part.
+        private bool TakeActionDefence(IPirateGame game, PirateTactics tactics)
+        {
 
+            if (tactics != null)
+            {
+
+                if (tactics.Pirate.HasTreasure)
+                {
+                    foreach(Pirate enemy in EnemyGoodPirates(game))
+                    {
+
+                        if (game.InRange(tactics.Pirate, enemy) && enemy.ReloadTurns == 0 && !enemy.HasTreasure)
+                        {
+                            game.Defend(tactics.Pirate);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        //רועי חושב שיש לשנות בתנאי שזה יהיה כולל המספר האוצרות שווה ל0
+        //יש להוריד את החלק של ההגנה בtake action
         private void TakeAction(IPirateGame game, PirateTactics tactics)
         {
             if (tactics != null && game.Treasures().Count >= 0)
@@ -162,7 +185,7 @@ namespace MyBot
                     {
                         foreach (Pirate enemyPirate in EnemyGoodPirates(game))
                         {
-                            if (game.InRange(tactics.Pirate, enemyPirate) && enemyPirate.ReloadTurns == 0)
+                            if (game.InRange(tactics.Pirate, enemyPirate) && enemyPirate.ReloadTurns == 0 && !enemyPirate.HasTreasure)
                             {
                                 game.Defend(tactics.Pirate);
                                 return;
