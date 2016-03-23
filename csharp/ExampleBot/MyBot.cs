@@ -64,27 +64,71 @@ namespace MyBot
             }
         }
 
+        //TODO: NOT FINISHED - IT IS USING TRY DEFENCE AND TRY ATTACK
         private void NewPriorityGoldMoves(IPirateGame game, List<PirateTactics> tactics)
         {
-            List<PirateTactics> sortedtactics = new List<PirateTactics>();
-
-            int mindistance = int.MaxValue;
+            int movesleft = Maxmoves;
+            int maxdistnace;
             int distance;
-            PirateTactics minTactic;
-            while (tactics.Count > 0)
+            PirateTactics maxTactic;
+            Pirate enemy;
+            LinkedList<PirateTactics> sortedlinkedtactics = new LinkedList<PirateTactics>();
+
+
+            foreach (PirateTactics tactic in tactics)
             {
-                foreach (PirateTactics tactic in tactics)
+                enemy = tryAttack(game, tactic.Pirate, false);
+                if(tryDefence(game, tactic.Pirate, false) || (enemy != null && game.InRange(tactic.Pirate, enemy)))
                 {
-                    if(tactic.FinalDestination != null)
-                    {
-                        distance = game.Distance(tactic.Pirate, tactic.FinalDestination);
-                        if(distance < mindistance)
-                        {
-                            mindistance = distance;
-                        }
-                    }
+                    sortedlinkedtactics.AddLast(tactic);
+                    tactics.Remove(tactic);
                 }
             }
+            while (tactics.Count > 0)
+            {
+                maxdistnace = int.MinValue;
+                maxTactic = null;
+
+                foreach (PirateTactics tactic in tactics)
+                {
+                    distance = game.Distance(tactic.Pirate, tactic.FinalDestination);
+                    if (distance > maxdistnace)
+                    {
+                        maxdistnace = distance;
+                        maxTactic = tactic;
+                    }
+                }
+
+                sortedlinkedtactics.AddFirst(maxTactic);
+            }
+
+            foreach (PirateTactics tactic in sortedlinkedtactics)
+            {
+                tactics.Add(tactic);
+            }
+
+            
+
+            foreach (PirateTactics tactic in tactics)
+            {
+                distance = game.Distance(tactic.Pirate, tactic.FinalDestination);
+                if(movesleft == 0)
+                {
+                    tactic.Moves = 0;
+                }
+                else if(distance <= movesleft)
+                {
+                    tactic.Moves = distance;
+                    movesleft -= distance;
+                }
+                else
+                {
+                    tactic.Moves = movesleft;
+                    movesleft = 0;
+                }
+
+            }
+
 
         }
 
@@ -213,37 +257,38 @@ namespace MyBot
 
         }
 
-
+        //tashtit
         private PirateTactics GetPirateTarget(IPirateGame game, Pirate pirate)
         {
             PirateTactics tactics = new PirateTactics() { Pirate = pirate };
             tactics.Moves = PriorityGoldMoves(game, pirate);
 
-
             
-                if (tactics.Pirate.HasTreasure)
+            if(tryDefence(game, pirate, false))
+            {
+
+            }
+            else if (tactics.Pirate.HasTreasure)
+            {
+                tactics.FinalDestination = tactics.Pirate.InitialLocation;
+            }
+            else
+            {
+                Pirate enemyPirate = tryAttack(game, pirate, false);
+                if (enemyPirate != null && pirate.ReloadTurns == 0)
                 {
-                    tactics.FinalDestination = tactics.Pirate.InitialLocation;
+                    tactics.FinalDestination = enemyPirate.Location;
                 }
                 else
                 {
-                    Pirate enemyPirate = findEnemyWithTreasure(game, pirate);
-                    if (enemyPirate != null && pirate.ReloadTurns == 0)
+                    Treasure treasure = minTreasureFromPirate(game, pirate);
+                    if (treasure != null)
                     {
-                        game.Debug("ani po!");
-                        tactics.FinalDestination = enemyPirate.Location;
-
-                    }
-                    else
-                    {
-                        Treasure treasure = minTreasureFromPirate(game, pirate);
-                        if (treasure != null)
-                        {
                         tactics.FinalDestination = treasure.Location;
                         targetableTreasures.Remove(treasure);
                     }
                 }
-                }
+            }
 
                 return tactics;
 
@@ -1069,7 +1114,7 @@ namespace MyBot
         //TODO: Oz I need this function
 
         /// <summary>
-        /// the same as 
+        /// the same as roee
         /// </summary>
         /// <param name="game"></param>
         /// <param name="pirate"></param>
