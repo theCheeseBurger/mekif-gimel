@@ -122,11 +122,11 @@ namespace MyBot
         }
 
         //DO NOT TOUCH - ROEE FUNCITON
-        private bool TryDefence(IPirateGame game, Pirate friendlyPirate)
+        private bool TryDefence(IPirateGame game, Pirate friendlyPirate, bool canDefence)
         {
             foreach (Pirate enemy in game.EnemyPirates())
             {
-                if (game.InRange(friendlyPirate, enemy) && enemy.ReloadTurns == 0 && !enemy.HasTreasure)
+                if (game.InRange(friendlyPirate, enemy) && enemy.ReloadTurns == 0 && !enemy.HasTreasure && canDefence)
                 {
                     game.Defend(friendlyPirate);
                     return true;
