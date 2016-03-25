@@ -26,9 +26,12 @@ namespace MyBot
             public Pirate Pirate { get; set; }
             public Location FinalDestination { get; set; }
             public Location TempDestination { get; set; }
+            public DestinationTarget destinationtarget { get; set; }
             public int Moves { get; set; }
 
         }
+
+        public enum DestinationTarget {toInitial, toPowerUp, toTreasure, toAttack, toDefence, toCollide}
 
         public void DoTurn(IPirateGame game)
         {
@@ -64,27 +67,71 @@ namespace MyBot
             }
         }
 
+        //TODO: NOT FINISHED - IT IS USING TRY DEFENCE AND TRY ATTACK - yesh lehosif enum.
         private void NewPriorityGoldMoves(IPirateGame game, List<PirateTactics> tactics)
         {
-            List<PirateTactics> sortedtactics = new List<PirateTactics>();
-
-            int mindistance = int.MaxValue;
+            int movesleft = Maxmoves;
+            int maxdistnace;
             int distance;
-            PirateTactics minTactic;
-            while (tactics.Count > 0)
+            PirateTactics maxTactic;
+            Pirate enemy;
+            LinkedList<PirateTactics> sortedlinkedtactics = new LinkedList<PirateTactics>();
+
+
+            foreach (PirateTactics tactic in tactics)
             {
-                foreach (PirateTactics tactic in tactics)
+                enemy = tryAttack(game, tactic.Pirate, false);
+                if(tryDefence(game, tactic.Pirate, false) || (enemy != null && game.InRange(tactic.Pirate, enemy)))
                 {
-                    if(tactic.FinalDestination != null)
-                    {
-                        distance = game.Distance(tactic.Pirate, tactic.FinalDestination);
-                        if(distance < mindistance)
-                        {
-                            mindistance = distance;
-                        }
-                    }
+                    sortedlinkedtactics.AddLast(tactic);
+                    tactics.Remove(tactic);
                 }
             }
+            while (tactics.Count > 0)
+            {
+                maxdistnace = int.MinValue;
+                maxTactic = null;
+
+                foreach (PirateTactics tactic in tactics)
+                {
+                    distance = game.Distance(tactic.Pirate, tactic.FinalDestination);
+                    if (distance > maxdistnace)
+                    {
+                        maxdistnace = distance;
+                        maxTactic = tactic;
+                    }
+                }
+
+                sortedlinkedtactics.AddFirst(maxTactic);
+            }
+
+            foreach (PirateTactics tactic in sortedlinkedtactics)
+            {
+                tactics.Add(tactic);
+            }
+
+            
+
+            foreach (PirateTactics tactic in tactics)
+            {
+                distance = game.Distance(tactic.Pirate, tactic.FinalDestination);
+                if(movesleft == 0)
+                {
+                    tactic.Moves = 0;
+                }
+                else if(distance <= movesleft)
+                {
+                    tactic.Moves = distance;
+                    movesleft -= distance;
+                }
+                else
+                {
+                    tactic.Moves = movesleft;
+                    movesleft = 0;
+                }
+
+            }
+
 
         }
 
@@ -213,43 +260,62 @@ namespace MyBot
 
         }
 
-
+        //tashtit
         private PirateTactics GetPirateTarget(IPirateGame game, Pirate pirate)
         {
             PirateTactics tactics = new PirateTactics() { Pirate = pirate };
-            tactics.Moves = PriorityGoldMoves(game, pirate);
-
-
             
-                if (tactics.Pirate.HasTreasure)
+
+            if (tryDefence(game, pirate, false))
+            {
+
+            }
+            else if (tactics.Pirate.HasTreasure)
+            {
+                tactics.FinalDestination = tactics.Pirate.InitialLocation;
+            }
+            else
+            {
+                Pirate enemyPirate = pirateinOurInitals(game);
+                if (enemyPirate == null)
                 {
-                    tactics.FinalDestination = tactics.Pirate.InitialLocation;
-                }
-                else
-                {
-                    Pirate enemyPirate = findEnemyWithTreasure(game, pirate);
+                    enemyPirate = findEnemyWithTreasure(game, pirate);
                     if (enemyPirate != null && pirate.ReloadTurns == 0)
                     {
-                        game.Debug("ani po!");
                         tactics.FinalDestination = enemyPirate.Location;
-
                     }
                     else
                     {
                         Treasure treasure = minTreasureFromPirate(game, pirate);
                         if (treasure != null)
                         {
-                        tactics.FinalDestination = treasure.Location;
-                        targetableTreasures.Remove(treasure);
+                            tactics.FinalDestination = treasure.Location;
+                            targetableTreasures.Remove(treasure);
+                        }
+                        else
+                        {
+                            enemyPirate = minPirateFromPirates(game, pirate, game.EnemySoberPirates());
+
+                            if (enemyPirate != null && tactics.Pirate.Location != enemyPirate.InitialLocation && enemyPirate.ReloadTurns == 0)
+                            {
+                                tactics.FinalDestination = enemyPirate.InitialLocation;
+
+                                tactics.destinationtarget = DestinationTarget.toCollide;
+                            }
+                        }
                     }
                 }
+                else
+                {
+                    tactics.FinalDestination = enemyPirate.Location;
+                    tactics.destinationtarget = DestinationTarget.toCollide;
                 }
 
-                return tactics;
+            }
 
+            tactics.Moves = PriorityGoldMoves(game, pirate, tactics.destinationtarget);
 
-
-
+            return tactics;
         }
 
         /// <summary>
@@ -258,7 +324,7 @@ namespace MyBot
         /// <param name="game"></param>
         /// <param name="pirate"></param>
         /// <returns></returns>
-        private int PriorityGoldMoves(IPirateGame game, Pirate pirate)
+        private int PriorityGoldMoves(IPirateGame game, Pirate pirate, DestinationTarget destionationtarget)
         {
             if (pirate.TurnsToSober != 0)
             {
@@ -268,7 +334,7 @@ namespace MyBot
             {
                 return 1;
             }
-            if (isMovesLeft)
+            if (isMovesLeft && (destionationtarget != DestinationTarget.toCollide || !isPirateInPiratesInitial(game, pirate, game.EnemyPirates())))
             {
                 isMovesLeft = false;
                 return Maxmoves - game.MyPiratesWithTreasures().Count;
@@ -401,7 +467,7 @@ namespace MyBot
                 locations = game.GetSailOptions(tactic.Pirate, tactic.FinalDestination, tactic.Moves);
                 NoCollisionOnlyFriends(game, tactic, tactics, locations);
             }
-            else if (tactic.Moves == 0 && game.GetPirateOn(tactic.FinalDestination) != null || tactic.Moves > 0)
+            else if (locations.Count > 0 && (tactic.Moves == 0 && game.GetPirateOn(tactic.FinalDestination) != null) || tactic.Moves > 0)
             {
                 tactic.TempDestination = locations[0];
             }
@@ -443,7 +509,10 @@ namespace MyBot
         {
             foreach (Pirate pirate in game.EnemyPirates())
             {
-                locations.Remove(pirate.Location);
+                if (tactic.destinationtarget != DestinationTarget.toCollide)
+                {
+                    locations.Remove(pirate.Location);
+                }
             }
             foreach (Pirate pirate in game.MyPirates())
             {
@@ -467,6 +536,54 @@ namespace MyBot
                     tactic.TempDestination = null;
                 }
             
+        }
+
+        private Pirate minPirateFromPirates(IPirateGame game, Pirate pirate, List<Pirate> pirates)
+        {
+            int mindistance = int.MaxValue;
+            Pirate minPirate = null;
+
+            foreach (Pirate aPirate in pirates)
+            {
+                if(game.Distance(pirate, aPirate) < mindistance)
+                {
+                    mindistance = game.Distance(pirate, aPirate);
+                    minPirate = aPirate;
+                }
+            }
+
+            return minPirate;
+
+        }
+
+        private Pirate pirateinOurInitals(IPirateGame game)
+        {
+
+            Pirate ePirate;
+
+		        foreach (Pirate fPirate in game.MyPirates())
+	            {
+                    ePirate = game.GetPirateOn(fPirate.InitialLocation);
+		            if(ePirate != null && ePirate != fPirate)
+                    {
+                        return ePirate;
+                    }
+	            }   
+            
+            return null;
+            
+        }
+
+        private bool isPirateInPiratesInitial(IPirateGame game, Pirate pirate, List<Pirate> pirates)
+        {
+            foreach (Pirate aPirate in pirates)
+            {
+                if(game.GetPirateOn(aPirate.InitialLocation) == pirate)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         #region Not Used
@@ -1063,19 +1180,26 @@ namespace MyBot
         /// <returns></returns>
         private bool tryDefence(IPirateGame game, Pirate pirate, bool toDefend)
         {
-            return true;
+            return false;
         }
 
         //TODO: Oz I need this function
 
         /// <summary>
-        /// the same as 
+        /// the same as roee
         /// </summary>
         /// <param name="game"></param>
         /// <param name="pirate"></param>
         /// <param name="toAttack"></param>
         /// <returns></returns>
         private Pirate tryAttack(IPirateGame game, Pirate pirate, bool toAttack)
+        {
+            return null;
+        }
+
+        //TODO: Vitaly
+
+        private Powerup TryPowerUp(IPirateGame game, Pirate pirate)
         {
             return null;
         }
