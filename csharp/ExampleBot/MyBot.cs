@@ -1384,20 +1384,6 @@ namespace MyBot
         #endregion
 
 
-        //TODO: Roee i need this function
-
-        /// <summary>
-        /// its the same as your funcion but i need bool(once for pirate target , and i dont want to defend, and once for takeaction)
-        /// </summary>
-        /// <param name="game"></param>
-        /// <param name="pirate"></param>
-        /// <param name="toDefend"></param>
-        /// <returns></returns>
-        private bool tryDefence(IPirateGame game, Pirate pirate, bool toDefend)
-        {
-            return false;
-        }
-
         private int SumOfAllTreasureMovements(IPirateGame game)
         {
             int moves = 0;
@@ -1463,12 +1449,47 @@ namespace MyBot
             return 0;
         }
 
+        /// <summary>
+        /// sorting the tactics by their distance to the final destination.
+        /// </summary>
+        /// <param name="game"></param>
+        /// <param name="tactics"></param>
         private void SortByDistance(IPirateGame game, List<PirateTactics> tactics)
         {
+            int distnace;
+            int mindistance;
+            PirateTactics minTactic;
             List<PirateTactics> sortedList = new List<PirateTactics>();
-            int mindistance = int.MaxValue;
+
+
+            while(tactics.Count > 0)
+            {
+                mindistance = int.MaxValue;
+                minTactic = null;
+                foreach (PirateTactics tactic in tactics)
+                {
+                    distnace = game.Distance(tactic.Pirate, tactic.FinalDestination);
+                    if(distnace < mindistance)
+                    {
+                        mindistance = distnace;
+                        minTactic = tactic;
+                    }
+
+                }
+
+                sortedList.Add(minTactic);
+                tactics.Remove(minTactic);
+
+            }
+
+            tactics = sortedList;
 
             
+        }
+
+        private bool tryDefence(IPirateGame game, Pirate pirate, bool degel)
+        {
+            return false;
         }
         
     }
