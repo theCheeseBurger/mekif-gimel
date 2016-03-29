@@ -259,7 +259,23 @@ namespace MyBot
             }
             return goodPirates;
         }
+      
         //TODO: פעולה שמחזירה לי האם אני הולך להגן בתור הזה או לא
+        private bool IsGoingToDefencde(IPirateGame game, Pirate friendlyPirate)
+        {
+            foreach (Pirate enemy in game.EnemyPirates())
+            {
+                if (friendlyPirate.DefenseReloadTurns == 0)
+                {
+                    if (game.InRange(friendlyPirate, enemy) && enemy.ReloadTurns == 0 && !enemy.HasTreasure)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    
         //DO NOT TOUCH - ROEE FUNCITON - has changed.
         private bool TryDefence(IPirateGame game, Pirate friendlyPirate)
         {
