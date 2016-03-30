@@ -1629,6 +1629,7 @@ namespace MyBot
             }
             return null;
         }
+        //TODO: check why it doesn't work
         private Pirate LetMeHelp(IPirateGame game)
         {
             foreach (Pirate friendlyPirate in game.MyPiratesWithTreasures())
